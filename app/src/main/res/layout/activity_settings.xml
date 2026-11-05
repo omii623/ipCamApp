@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <!-- TÉMA -->
+            <TextView
+                style="@style/SettingsHeader"
+                android:text="@string/theme" />
+
+            <RadioGroup
+                android:id="@+id/themeGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioButton
+                    android:id="@+id/themeSystem"
+                    style="@style/SettingsOption"
+                    android:text="@string/theme_system" />
+
+                <RadioButton
+                    android:id="@+id/themeLight"
+                    style="@style/SettingsOption"
+                    android:text="@string/theme_light" />
+
+                <RadioButton
+                    android:id="@+id/themeDark"
+                    style="@style/SettingsOption"
+                    android:text="@string/theme_dark" />
+            </RadioGroup>
+
+            <View style="@style/SettingsDivider" />
+
+            <!-- NYELV -->
+            <TextView
+                style="@style/SettingsHeader"
+                android:text="@string/language" />
+
+            <RadioGroup
+                android:id="@+id/langGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioButton
+                    android:id="@+id/langSystem"
+                    style="@style/SettingsOption"
+                    android:text="@string/language_system" />
+
+                <RadioButton
+                    android:id="@+id/langHu"
+                    style="@style/SettingsOption"
+                    android:text="Magyar" />
+
+                <RadioButton
+                    android:id="@+id/langEn"
+                    style="@style/SettingsOption"
+                    android:text="English" />
+            </RadioGroup>
+
+            <View style="@style/SettingsDivider" />
+
+            <!-- KIEMELŐSZÍN -->
+            <TextView
+                style="@style/SettingsHeader"
+                android:text="@string/accent_color" />
+
+            <!-- Egyéni szín csúszkával -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="8dp">
+
+                <View
+                    android:id="@+id/accentPreview"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="16dp" />
+
+                <SeekBar
+                    android:id="@+id/hueSlider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="360" />
+            </LinearLayout>
+
+            <View style="@style/SettingsDivider" />
+
+            <!-- KERESÉS -->
+            <TextView
+                style="@style/SettingsHeader"
+                android:text="@string/discover" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/searchPortsLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:hint="@string/search_ports">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/searchPortsInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:digits="0123456789, "
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <View style="@style/SettingsDivider" />
+
+            <!-- ADATOK: mentés / visszaállítás / QR megosztás -->
+            <TextView
+                style="@style/SettingsHeader"
+                android:text="@string/data" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/exportButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/export" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/importButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/import_" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Névjegy a képernyő legalján, középen (a görgethető rész alatt) -->
+    <TextView
+        android:id="@+id/aboutText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:paddingVertical="14dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
+</LinearLayout>
