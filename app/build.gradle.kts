@@ -1,9 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
 
 // Egyedi build-azonosító (rövid hash), ami minden fordításnál frissül
 val buildHash: String = "%08x".format(System.currentTimeMillis().hashCode())
+
+// Release aláírás a keystore.properties alapján (nincs verziókövetve). Ha hiányzik,
+// a projekt továbbra is lefordul – a release build ilyenkor aláíratlan marad.
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) keystorePropsFile.inputStream().use { load(it) }
+}
+val hasReleaseKeystore = keystorePropsFile.exists()
 
 android {
     namespace = "com.example.ipcamapp"
@@ -22,11 +32,23 @@ android {
         buildConfigField("String", "BUILD_HASH", "\"$buildHash\"")
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             optimization {
                 enable = false
             }
+            if (hasReleaseKeystore) signingConfig = signingConfigs.getByName("release")
         }
     }
     buildFeatures {
