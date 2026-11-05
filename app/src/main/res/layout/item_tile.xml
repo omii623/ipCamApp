@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="1dp"
+    android:background="#222222"
+    android:foreground="?attr/selectableItemBackground">
+
+    <!-- texture_view: görgethető nézetben jobban viselkedik, mint a SurfaceView -->
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/tilePlayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        app:resize_mode="fit"
+        app:surface_type="texture_view"
+        app:use_controller="false" />
+
+    <com.example.ipcamapp.MjpegView
+        android:id="@+id/tileMjpeg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/tileProgress"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center" />
+
+    <TextView
+        android:id="@+id/tileStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="#FF8080"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tileName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:background="#80000000"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="2dp"
+        android:textColor="@android:color/white"
+        android:textSize="12sp" />
+</FrameLayout>
