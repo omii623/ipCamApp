@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kamera-objektív logó: türkiz gyűrű, sötét lencse, csillanás és piros "REC" pont.
+     Minden elem a 66dp-s biztonságos zónán (21..87) belül van. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- külső gyűrű -->
+    <path
+        android:fillColor="@color/accent"
+        android:pathData="M54,30a24,24 0,1 1,0 48a24,24 0,1 1,0 -48z" />
+    <!-- objektív test -->
+    <path
+        android:fillColor="#FF0B0F14"
+        android:pathData="M54,35a19,19 0,1 1,0 38a19,19 0,1 1,0 -38z" />
+    <!-- belső lencse gyűrű -->
+    <path
+        android:fillColor="#FF0E7490"
+        android:pathData="M54,42a12,12 0,1 1,0 24a12,12 0,1 1,0 -24z" />
+    <!-- pupilla -->
+    <path
+        android:fillColor="#FF061018"
+        android:pathData="M54,47a7,7 0,1 1,0 14a7,7 0,1 1,0 -14z" />
+    <!-- csillanás -->
+    <path
+        android:fillColor="#CCFFFFFF"
+        android:pathData="M49,45.5a3,3 0,1 1,0 6a3,3 0,1 1,0 -6z" />
+    <!-- piros felvétel jelző -->
+    <path
+        android:fillColor="@color/rec_red"
+        android:pathData="M72,28.5a4.5,4.5 0,1 1,0 9a4.5,4.5 0,1 1,0 -9z" />
+</vector>

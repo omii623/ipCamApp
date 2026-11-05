@@ -1,0 +1,39 @@
+<resources>
+    <!-- DayNight: a világos/sötét váltást a @color/* DayNight erőforrások adják,
+         a tényleges módot az AppCompatDelegate.setDefaultNightMode() állítja. -->
+    <style name="Theme.IpCamApp" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorPrimaryVariant">@color/accent_dark</item>
+        <item name="colorOnPrimary">@color/on_accent</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSecondaryVariant">@color/accent_dark</item>
+        <item name="colorOnSecondary">@color/on_accent</item>
+        <item name="colorError">@color/rec_red</item>
+
+        <item name="android:colorBackground">@color/bg</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="colorControlNormal">@color/accent</item>
+
+        <item name="actionBarStyle">@style/Widget.IpCamApp.ActionBar</item>
+        <item name="android:statusBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:windowLightStatusBar">@bool/light_status_bar</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.IpCamApp.Dialog</item>
+    </style>
+
+    <!-- Az akciósáv a felületi (surface) színt használja, így világosban és sötétben is jól néz ki -->
+    <style name="Widget.IpCamApp.ActionBar" parent="Widget.MaterialComponents.ActionBar.Surface">
+        <item name="background">@color/surface</item>
+    </style>
+
+    <style name="ThemeOverlay.IpCamApp.Dialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorSurface">@color/surface_variant</item>
+        <item name="android:background">@color/surface_variant</item>
+    </style>
+</resources>
