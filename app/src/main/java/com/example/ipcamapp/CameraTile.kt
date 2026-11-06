@@ -32,6 +32,7 @@ class CameraTile(context: Context, parent: ViewGroup, val camera: Camera) {
 
     init {
         view.findViewById<TextView>(R.id.tileName).text = camera.name
+        progress.indeterminateTintList = android.content.res.ColorStateList.valueOf(context.accentColor())
     }
 
     fun start() {
@@ -65,8 +66,13 @@ class CameraTile(context: Context, parent: ViewGroup, val camera: Camera) {
         playerView.visibility = View.VISIBLE
         mjpegView.visibility = View.GONE
         val ctx = view.context
-        val exo = ExoPlayer.Builder(ctx).build()
-        exo.volume = 0f // több kamera egyszerre – hang nélkül
+        // több kamera egyszerre: hang nélkül (dekódolás sincs), legfeljebb a csempe felbontásában
+        val lp = view.layoutParams
+        val exo = ctx.liveExoPlayer(
+            maxWidth = lp?.width?.takeIf { it > 0 } ?: 0,
+            maxHeight = lp?.height?.takeIf { it > 0 } ?: 0,
+            audio = false,
+        )
         val source = if (camera.type == StreamType.RTSP) {
             RtspMediaSource.Factory()
                 .setTimeoutMs(8000)
@@ -92,7 +98,7 @@ class CameraTile(context: Context, parent: ViewGroup, val camera: Camera) {
             override fun onPlayerError(error: PlaybackException) {
                 showError(error.cause?.message ?: error.errorCodeName)
                 // automatikus újrapróbálás pár másodperc múlva
-                view.postDelayed({ if (player === exo) start() }, 5000)
+                view.postDelayed({ if (player === exo) start() }, STREAM_RETRY_MS)
             }
         })
         exo.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT)

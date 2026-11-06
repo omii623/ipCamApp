@@ -41,11 +41,14 @@ class GridActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        // amíg a videó megy (az oldal látható), a telefon ne aludjon el
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         buildGrid()
     }
 
     override fun onStop() {
         super.onStop()
+        window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         tiles.forEach { it.stop() }
     }
 

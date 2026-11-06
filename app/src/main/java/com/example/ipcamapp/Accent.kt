@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -49,6 +50,7 @@ fun androidx.appcompat.app.AlertDialog.tintButtonsAccent(color: Int) {
 /** Egy nézetfa accent-hordozó elemeinek átszínezése (dialógus nézetekhez is használható). */
 fun View.tintAccentTree(color: Int) {
     val csl = ColorStateList.valueOf(color)
+    tintScrollbars(color)
     when (this) {
         is FloatingActionButton -> {
             backgroundTintList = csl
@@ -76,4 +78,34 @@ fun View.tintAccentTree(color: Int) {
         is TextView -> if (tag == "accent") setTextColor(color)
     }
     if (this is ViewGroup) for (i in 0 until childCount) getChildAt(i).tintAccentTree(color)
+}
+
+/**
+ * Az oldalsó görgetősáv (scrollbar) fogantyújának átszínezése. Alapból a téma
+ * colorControlNormal-ját (fix @color/accent) használja, így az egyéni kiemelőszínt
+ * nem követné. A thumb drawable csak API 29+ érhető el; régebbi rendszeren marad a téma színe.
+ */
+internal fun View.tintScrollbars(color: Int) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+    if (isVerticalScrollBarEnabled) {
+        verticalScrollbarThumbDrawable?.mutate()?.let { it.setTint(color); verticalScrollbarThumbDrawable = it }
+    }
+    if (isHorizontalScrollBarEnabled) {
+        horizontalScrollbarThumbDrawable?.mutate()?.let { it.setTint(color); horizontalScrollbarThumbDrawable = it }
+    }
+}
+
+/**
+ * Legördülő menükhöz (gyártó, típus, csoport) való adapter: a felugró lista görgetősávja
+ * is a kiemelőszínt kövesse. A felugró lista a sorok szülője, így a sorok létrehozásakor érjük el.
+ */
+class AccentArrayAdapter(context: Context, items: List<String>) :
+    android.widget.ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, items) {
+    private val accent = context.accentColor()
+    private var tinted: ViewGroup? = null
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        if (tinted !== parent) { parent.tintScrollbars(accent); tinted = parent }
+        return super.getView(position, convertView, parent)
+    }
 }

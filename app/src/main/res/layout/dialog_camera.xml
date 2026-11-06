@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kamera hozzáadása / szerkesztése – tömör elrendezés:
+  - elöl a fontos mezők (gyártó, cím, név), a típus+port és a belépés egy-egy sorban,
+  - a ritkán kellő beállítások (csoport) a „További beállítások” alatt.
+-->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -9,22 +14,11 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="20dp"
-        android:paddingTop="8dp">
+        android:paddingTop="4dp">
 
+        <!-- Gyártói kitöltő: beállítja a típust, a portot, az útvonalat és a gyári felhasználónevet -->
         <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/hint_name">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/inputName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Gyártói kitöltő: beállítja a típust, az útvonalat és a gyári felhasználónevet -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/hint_preset"
@@ -36,25 +30,12 @@
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Csoport: választható a meglévőkből, vagy új név írható be -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/hint_group"
-            app:endIconMode="dropdown_menu">
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/inputGroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:completionThreshold="0"
-                android:inputType="textCapSentences" />
-        </com.google.android.material.textfield.TextInputLayout>
-
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutHost"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
             android:hint="@string/hint_host">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/inputHost"
@@ -64,32 +45,60 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_type"
-            app:endIconMode="dropdown_menu">
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/inputType"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="none" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/hint_port">
+            android:layout_marginTop="6dp"
+            android:hint="@string/hint_name">
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/inputPort"
+                android:id="@+id/inputName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number" />
+                android:inputType="textCapSentences" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
+        <!-- Típus + port egy sorban -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense.ExposedDropdownMenu"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/hint_type"
+                app:endIconMode="dropdown_menu">
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/inputType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+                android:layout_width="96dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:hint="@string/hint_port">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputPort"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <!-- Útvonal -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutPath"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
             android:hint="@string/hint_path">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/inputPath"
@@ -98,34 +107,85 @@
                 android:inputType="textUri" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
+        <!-- Felhasználónév + jelszó egy sorban -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_user">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/inputUser"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
 
-        <com.google.android.material.textfield.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/hint_user">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputUser"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:hint="@string/hint_pass"
+                app:endIconMode="password_toggle">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputPass"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <!-- Ritkán kellő beállítások: alapból összecsukva -->
+        <TextView
+            android:id="@+id/advancedToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="?attr/selectableItemBackground"
+            android:drawableEnd="@drawable/ic_arrow_drop_down"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:minHeight="40dp"
+            android:paddingEnd="8dp"
+            android:tag="accent"
+            android:text="@string/more_settings"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/advancedSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_pass"
-            app:endIconMode="password_toggle">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/inputPass"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Csoport: választható a meglévőkből, vagy új név írható be -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:hint="@string/hint_group"
+                app:endIconMode="dropdown_menu">
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/inputGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:completionThreshold="0"
+                    android:inputType="textCapSentences" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
 
         <!-- Kapcsolat tesztelése a fent beírt (egy) belépéssel -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 

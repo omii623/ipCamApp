@@ -6,14 +6,24 @@ import org.json.JSONArray
 class CameraRepository(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("cameras", Context.MODE_PRIVATE)
 
+    /**
+     * Kamerák, amelyek jelszava nem fejthető vissza (id -> az eredeti titkosított érték).
+     * Ezeket mentéskor változatlanul visszaírjuk, amíg a felhasználó új jelszót nem ad meg,
+     * így egy átmeneti / eszközváltás miatti hiba nem törli véglegesen a jelszót.
+     */
+    private val locked = mutableMapOf<String, String>()
+
+    /** Hány kamera jelszava nem fejthető vissza (pl. telefonváltás után). */
+    fun lockedCount(): Int { getAll(); return locked.size }
+
     fun getAll(): List<Camera> {
         val raw = prefs.getString(KEY, null) ?: return emptyList()
         val arr = JSONArray(raw)
+        locked.clear()
         return (0 until arr.length()).map { i ->
-            val o = arr.getJSONObject(i)
-            val cam = Camera.fromJson(o)
-            // a titkosított jelszót visszafejtjük; a régi (titkosítatlan) adat marad, ahogy van
-            if (o.optBoolean("pw_enc")) cam.copy(password = Crypto.decrypt(cam.password)) else cam
+            val (cam, blob) = decodeEntry(arr.getJSONObject(i), Crypto::decrypt)
+            if (blob != null) locked[cam.id] = blob
+            cam
         }
     }
 
@@ -58,18 +68,46 @@ class CameraRepository(context: Context) {
 
     private fun persist(list: List<Camera>) {
         val arr = JSONArray()
-        list.forEach { cam ->
-            val o = cam.toJson()
-            // a jelszót titkosítva tároljuk (a memóriában marad nyílt szövegként)
-            o.put("password", Crypto.encrypt(cam.password))
-            o.put("pw_enc", true)
-            arr.put(o)
-        }
+        // a jelszót titkosítva tároljuk (a memóriában nyílt szövegként van)
+        list.forEach { cam -> arr.put(encodeEntry(cam, locked[cam.id], Crypto::encrypt)) }
         prefs.edit().putString(KEY, arr.toString()).apply()
     }
 
     companion object {
         private const val KEY = "list"
+
+        /**
+         * Egy tárolt bejegyzés -> kamera. Ha a jelszó titkosított, de nem fejthető vissza,
+         * a kamera üres jelszót kap, a második érték pedig az eredeti titkosított adat (különben null).
+         * Tiszta függvény (a titkosítás kívülről jön) – unit-tesztelhető.
+         */
+        fun decodeEntry(o: org.json.JSONObject, decrypt: (String) -> String?): Pair<Camera, String?> {
+            val cam = Camera.fromJson(o)
+            if (!o.optBoolean("pw_enc") || cam.password.isEmpty()) return cam to null
+            val plain = decrypt(cam.password)
+            return if (plain != null) cam.copy(password = plain) to null
+                   else cam.copy(password = "") to cam.password
+        }
+
+        /**
+         * Kamera -> tárolt bejegyzés.
+         * - üres jelszó + [lockedBlob]: a vissza nem fejthető eredeti marad (nem írjuk felül üressel),
+         * - sikeres titkosítás: titkosítva,
+         * - sikertelen titkosítás: nyíltan (pw_enc=false) – inkább ez, mint a jelszó elvesztése.
+         */
+        fun encodeEntry(cam: Camera, lockedBlob: String?, encrypt: (String) -> String?): org.json.JSONObject {
+            val o = cam.toJson()
+            when {
+                cam.password.isEmpty() && lockedBlob != null -> { o.put("password", lockedBlob); o.put("pw_enc", true) }
+                cam.password.isEmpty() -> o.put("pw_enc", false)
+                else -> {
+                    val enc = encrypt(cam.password)
+                    if (enc != null) { o.put("password", enc); o.put("pw_enc", true) }
+                    else o.put("pw_enc", false)
+                }
+            }
+            return o
+        }
 
         /** Összefésülés id szerint: a meglévő listában a [incoming] elemei frissítik az
          *  azonos id-jűeket, az újak a végére kerülnek. Tiszta függvény (teszteléshez). */

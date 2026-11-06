@@ -27,7 +27,7 @@ data class OnvifDevice(
 
 data class OnvifStream(val profileName: String, val uri: String)
 
-class OnvifAuthException : IOException("Hibás felhasználónév vagy jelszó")
+class OnvifAuthException : IOException("ONVIF: unauthorized")
 
 /** Minimális ONVIF kliens: WS-Discovery keresés + stream URI lekérdezés. */
 object Onvif {
@@ -122,7 +122,7 @@ object Onvif {
         if (code == 401 || text.contains("NotAuthorized") || text.contains("FailedAuthentication")) {
             throw OnvifAuthException()
         }
-        if (code >= 400) throw IOException("ONVIF hiba: HTTP $code")
+        if (code >= 400) throw IOException("ONVIF HTTP $code")
         return text
     }
 

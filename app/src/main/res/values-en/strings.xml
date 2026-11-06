@@ -104,4 +104,16 @@
     <string name="about">About</string>
     <string name="about_version">%1$s · v%2$s</string>
     <string name="about_text">View IP cameras over RTSP, HTTP MJPEG, JPEG and HLS streams on the local network.</string>
+    <string name="stream_disconnected">Connection lost</string>
+    <string name="more_settings">More settings</string>
+    <string name="scan_bad_mask">Invalid mask: /%1$s (must be 16–32)</string>
+    <string name="scan_bad_range_end">Invalid range end: %1$s</string>
+    <string name="scan_range_reversed">The range end is lower than its start: %1$s</string>
+    <string name="scan_range_too_big">Range too large (max. %1$d addresses)</string>
+    <string name="scan_range_empty">Enter an IP range</string>
+    <string name="scan_bad_port">Invalid port: %1$s</string>
+    <string name="scan_ports_empty">Enter at least one port</string>
+    <string name="scan_ports_too_many">At most %1$d ports can be given</string>
+    <string name="scan_bad_ip">Invalid IP address: %1$s</string>
+    <string name="passwords_locked">The password of %1$d camera(s) cannot be read on this phone (e.g. after switching phones or restoring). Edit these cameras and enter the password again.</string>
 </resources>

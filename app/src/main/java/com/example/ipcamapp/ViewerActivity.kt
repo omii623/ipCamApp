@@ -50,6 +50,8 @@ class ViewerActivity : AppCompatActivity() {
         playerView = findViewById(R.id.playerView)
         mjpegView = findViewById(R.id.mjpegView)
         progress = findViewById(R.id.progress)
+        // a töltő animáció is a választott kiemelőszínt kövesse
+        progress.indeterminateTintList = android.content.res.ColorStateList.valueOf(accentColor())
         status = findViewById(R.id.statusText)
         urlText = findViewById(R.id.urlText)
         urlText.text = cam.displayUrl()
@@ -122,6 +124,8 @@ class ViewerActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        // amíg a videó megy (az oldal látható), a telefon ne aludjon el
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (!::camera.isInitialized) return
         when (camera.type) {
             StreamType.RTSP, StreamType.HLS -> startExo()
@@ -132,6 +136,7 @@ class ViewerActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         player?.release()
         player = null
         if (::mjpegView.isInitialized) mjpegView.stop()
@@ -143,7 +148,7 @@ class ViewerActivity : AppCompatActivity() {
         mjpegView.visibility = View.GONE
         showLoading()
 
-        val exo = ExoPlayer.Builder(this).build()
+        val exo = liveExoPlayer()
         val source = if (camera.type == StreamType.RTSP) {
             RtspMediaSource.Factory()
                 .setTimeoutMs(8000)
@@ -166,6 +171,14 @@ class ViewerActivity : AppCompatActivity() {
             }
             override fun onPlayerError(error: PlaybackException) {
                 showError(error.cause?.message ?: error.errorCodeName)
+                // automatikus újrapróbálás (pl. rövid Wi-Fi-kiesés után), ha közben nem léptek ki
+                playerView.postDelayed({
+                    if (player === exo) {
+                        exo.release()
+                        player = null
+                        startExo()
+                    }
+                }, STREAM_RETRY_MS)
             }
         })
         exo.setMediaSource(source)
@@ -179,6 +192,7 @@ class ViewerActivity : AppCompatActivity() {
         playerView.visibility = View.GONE
         mjpegView.visibility = View.VISIBLE
         showLoading()
+        mjpegView.downsample = false // nagyítható nézet: teljes felbontás kell
         mjpegView.onFirstFrame = { hideLoading() }
         mjpegView.onError = { showError(it) }
         mjpegView.start(

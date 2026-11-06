@@ -32,7 +32,13 @@ object PortScanner {
         return "${b[0].toInt() and 0xFF}.${b[1].toInt() and 0xFF}.${b[2].toInt() and 0xFF}.1-254"
     }
 
-    class RangeException(msg: String) : Exception(msg)
+    /**
+     * Érvénytelen tartomány / port. A szöveg fordítható erőforrás ([res] + [args]),
+     * a megjelenítéshez: [message] (Context-tel).
+     */
+    class RangeException(val res: Int, vararg val args: Any) : Exception("range error") {
+        fun message(context: android.content.Context): String = context.getString(res, *args)
+    }
 
     /**
      * Tartomány értelmezése. Elfogadott formák (vesszővel több is megadható):
@@ -48,7 +54,7 @@ object PortScanner {
                 part.contains('/') -> {
                     val (ip, bitsStr) = part.split('/', limit = 2)
                     val bits = bitsStr.toIntOrNull()?.takeIf { it in 16..32 }
-                        ?: throw RangeException("Hibás maszk: /$bitsStr (16–32 lehet)")
+                        ?: throw RangeException(R.string.scan_bad_mask, bitsStr)
                     val base = ipToLong(ip)
                     val mask = if (bits == 0) 0L else (0xFFFFFFFFL shl (32 - bits)) and 0xFFFFFFFFL
                     val net = base and mask
@@ -61,38 +67,38 @@ object PortScanner {
                     val start = ipToLong(a)
                     val end = if (b.contains('.')) ipToLong(b) else {
                         val last = b.toIntOrNull()?.takeIf { it in 0..255 }
-                            ?: throw RangeException("Hibás tartomány vége: $b")
+                            ?: throw RangeException(R.string.scan_bad_range_end, b)
                         (start and 0xFFFFFF00L) or last.toLong()
                     }
-                    if (end < start) throw RangeException("A tartomány vége kisebb, mint az eleje: $part")
+                    if (end < start) throw RangeException(R.string.scan_range_reversed, part)
                     start to end
                 }
                 else -> ipToLong(part).let { it to it }
             }
             if (to - from + 1 + result.size > MAX_ADDRESSES) {
-                throw RangeException("Túl nagy tartomány (max. $MAX_ADDRESSES cím)")
+                throw RangeException(R.string.scan_range_too_big, MAX_ADDRESSES)
             }
             for (v in from..to) result.add(v)
         }
-        if (result.isEmpty()) throw RangeException("Adj meg egy IP tartományt")
+        if (result.isEmpty()) throw RangeException(R.string.scan_range_empty)
         return result.map(::longToIp)
     }
 
     /** "554, 8554 8080" -> [554, 8554, 8080] */
     fun parsePorts(text: String): List<Int> {
         val ports = text.split(',', ';', ' ').map { it.trim() }.filter { it.isNotEmpty() }.map {
-            it.toIntOrNull()?.takeIf { p -> p in 1..65535 } ?: throw RangeException("Hibás port: $it")
+            it.toIntOrNull()?.takeIf { p -> p in 1..65535 } ?: throw RangeException(R.string.scan_bad_port, it)
         }.distinct()
-        if (ports.isEmpty()) throw RangeException("Adj meg legalább egy portot")
-        if (ports.size > 10) throw RangeException("Legfeljebb 10 port adható meg")
+        if (ports.isEmpty()) throw RangeException(R.string.scan_ports_empty)
+        if (ports.size > 10) throw RangeException(R.string.scan_ports_too_many, 10)
         return ports
     }
 
     private fun ipToLong(ip: String): Long {
         val p = ip.trim().split('.')
-        if (p.size != 4) throw RangeException("Hibás IP cím: $ip")
+        if (p.size != 4) throw RangeException(R.string.scan_bad_ip, ip)
         return p.fold(0L) { acc, s ->
-            val n = s.toIntOrNull()?.takeIf { it in 0..255 } ?: throw RangeException("Hibás IP cím: $ip")
+            val n = s.toIntOrNull()?.takeIf { it in 0..255 } ?: throw RangeException(R.string.scan_bad_ip, ip)
             (acc shl 8) or n.toLong()
         }
     }

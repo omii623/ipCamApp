@@ -42,6 +42,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from PIL import Image, ImageDraw, ImageFont
 
+# Windows konzolon a kimenet alapból cp1252, ami nem tud ékezetet / emojit kiírni
+# (UnicodeEncodeError miatt a szerver el sem indult). UTF-8 kimenet, a nem kiírható
+# karakterek helyett csere, hogy a kiírás soha ne állítsa le a szervert.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 WIDTH, HEIGHT = 640, 360
 FPS = 15
 COLORS = [(34, 211, 238), (239, 68, 68), (132, 204, 22), (250, 204, 21), (168, 85, 247), (249, 115, 22)]

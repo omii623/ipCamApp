@@ -92,12 +92,12 @@ class DiscoveryActivity : AppCompatActivity() {
         val ips = try {
             PortScanner.parseRange(rangeInput.text.toString())
         } catch (e: PortScanner.RangeException) {
-            rangeLayout.error = e.message; return
+            rangeLayout.error = e.message(this); return
         }
         val ports = try {
             PortScanner.parsePorts(portsInput.text.toString())
         } catch (e: PortScanner.RangeException) {
-            portsLayout.error = e.message; return
+            portsLayout.error = e.message(this); return
         }
         prefs.edit().putString(KEY_RANGE, rangeInput.text.toString().trim()).apply()
         // a kereséskor használt portok lesznek az új alapértelmezettek
@@ -125,13 +125,13 @@ class DiscoveryActivity : AppCompatActivity() {
         Thread {
             // 1. ONVIF (multicast – a tartománytól függetlenül a helyi hálózatot nézi)
             try {
-                Onvif.discover(3000) { dev -> runOnUiThread { add(Found.Onvif(dev)) } }
+                Onvif.discover(3000) { dev -> ui { add(Found.Onvif(dev)) } }
             } catch (_: Exception) { /* nincs multicast -> megy tovább a port kereséssel */ }
             releaseLock()
 
             // 2. Port keresés a megadott tartományban
             if (!cancelled) {
-                runOnUiThread {
+                ui {
                     progress.isIndeterminate = false
                     progress.max = ips.size
                     progress.progress = 0
@@ -139,12 +139,12 @@ class DiscoveryActivity : AppCompatActivity() {
                         ips.first(), ips.last(), ips.size, ports.joinToString(", "))
                 }
                 PortScanner.scan(ips, ports,
-                    onFound = { ip, port -> runOnUiThread { add(Found.Port(ip, port)) } },
-                    onProgress = { n -> runOnUiThread { progress.progress = n } },
+                    onFound = { ip, port -> ui { add(Found.Port(ip, port)) } },
+                    onProgress = { n -> ui { progress.progress = n } },
                     isCancelled = { cancelled },
                 )
             }
-            runOnUiThread {
+            ui {
                 finishScan(when {
                     cancelled && !isFinishing -> getString(R.string.discover_stopped, results.size)
                     results.isEmpty() -> getString(R.string.discover_none)
@@ -153,6 +153,12 @@ class DiscoveryActivity : AppCompatActivity() {
             }
         }.start()
     }
+
+    /**
+     * Háttérszálról a felületre: csak ha az oldal még él. Elforgatáskor / kilépéskor az oldal
+     * megszűnik, és egy megszűnt oldalon nyitott/bezárt ablak összeomlást okozna.
+     */
+    private fun ui(block: () -> Unit) = runOnUiThread { if (!isFinishing && !isDestroyed) block() }
 
     private fun releaseLock() {
         multicastLock?.let { if (it.isHeld) it.release() }
@@ -224,7 +230,7 @@ class DiscoveryActivity : AppCompatActivity() {
         val wait = AlertDialog.Builder(this).setMessage(R.string.onvif_fetching).setCancelable(false).show()
         Thread {
             val result = runCatching { Onvif.getStreams(dev, user, pass) }
-            runOnUiThread {
+            ui {
                 wait.dismiss()
                 result.onSuccess { streams ->
                     when (streams.size) {

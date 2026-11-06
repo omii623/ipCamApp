@@ -159,11 +159,21 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    private var lockedNoticeShown = false
+
     override fun onResume() {
         super.onResume()
         tintAccent() // ha a beállításokban más kiemelőszínt választottak
-        invalidateOptionsMenu()
-        refresh()
+        // telefonváltás / visszaállítás után a jelszavak nem fejthetők vissza: egyszer szólunk
+        val lockedCount = repo.lockedCount()
+        if (lockedCount > 0 && !lockedNoticeShown) {
+            lockedNoticeShown = true
+            AlertDialog.Builder(this)
+                .setMessage(getString(R.string.passwords_locked, lockedCount))
+                .setPositiveButton(R.string.ok, null)
+                .show().also { it.tintButtonsAccent(accentColor()) }
+        }
+        refresh() // a menüt is frissíti (invalidateOptionsMenu)
     }
 
     private fun refresh() {
@@ -252,7 +262,8 @@ class MainActivity : AppCompatActivity() {
                         .show().also { it.tintButtonsAccent(accentColor()) }
                 }
             }
-            .show()
+            .setNegativeButton(R.string.cancel, null)
+            .show().also { it.tintButtonsAccent(accentColor()) }
     }
 
     /** Saját gyártói sablon felvétele (név, típus, útvonal, gyári felhasználónév). */
@@ -266,9 +277,9 @@ class MainActivity : AppCompatActivity() {
         val userF = v.findViewById<TextInputEditText>(R.id.inputPresetUser)
 
         val types = StreamType.entries
-        typeView.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, types.map { it.label }))
+        typeView.setAdapter(AccentArrayAdapter(this, types.map { it.label(this) }))
         var t = StreamType.RTSP
-        typeView.setText(t.label, false)
+        typeView.setText(t.label(this), false)
         path.setText(t.defaultPath)
         typeView.setOnItemClickListener { _, _, pos, _ ->
             val old = t; t = types[pos]
@@ -435,11 +446,27 @@ class MainActivity : AppCompatActivity() {
         val testProgress = v.findViewById<View>(R.id.testProgress)
         val testIcon = v.findViewById<android.widget.ImageView>(R.id.testIcon)
         val testResult = v.findViewById<TextView>(R.id.testResult)
+        val advancedToggle = v.findViewById<TextView>(R.id.advancedToggle)
+        val advancedSection = v.findViewById<View>(R.id.advancedSection)
+
+        // „További beállítások”: ritkán kellő mezők összecsukva; a nyíl is a kiemelőszínt követi
+        // a nyíl nyitott állapotban felfelé mutat (RotateDrawable: level 0 = 0°, 10000 = 180°)
+        val arrow = android.graphics.drawable.RotateDrawable().apply {
+            drawable = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_arrow_drop_down)?.mutate()
+                ?.also { it.setTint(accentColor()) }
+            fromDegrees = 0f; toDegrees = 180f
+        }
+        advancedToggle.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, arrow, null)
+        fun setAdvanced(open: Boolean) {
+            advancedSection.visibility = if (open) View.VISIBLE else View.GONE
+            arrow.level = if (open) 10000 else 0
+        }
+        advancedToggle.setOnClickListener { setAdvanced(advancedSection.visibility != View.VISIBLE) }
 
         val types = StreamType.entries
-        typeView.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, types.map { it.label }))
+        typeView.setAdapter(AccentArrayAdapter(this, types.map { it.label(this) }))
         var selectedType = src?.type ?: StreamType.RTSP
-        typeView.setText(selectedType.label, false)
+        typeView.setText(selectedType.label(this), false)
         typeView.setOnItemClickListener { _, _, pos, _ ->
             val old = selectedType
             selectedType = types[pos]
@@ -452,7 +479,7 @@ class MainActivity : AppCompatActivity() {
         // A lista bővíthető saját sablonokkal, az utolsó elem a „+ Új gyártó…”.
         fun applyPreset(p: Preset) {
             selectedType = p.type
-            typeView.setText(p.type.label, false)
+            typeView.setText(p.type.label(this), false)
             port.setText(p.type.defaultPort.toString())
             path.setText(p.path)
             if (p.defaultUser.isNotEmpty()) user.setText(p.defaultUser)
@@ -460,7 +487,7 @@ class MainActivity : AppCompatActivity() {
         }
         fun refreshPresets() {
             val labels = Presets.labels(this) + getString(R.string.add_preset)
-            presetView.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, labels))
+            presetView.setAdapter(AccentArrayAdapter(this, labels))
         }
         refreshPresets()
         presetView.setOnItemClickListener { _, _, pos, _ ->
@@ -487,7 +514,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        group.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, repo.groups()))
+        group.setAdapter(AccentArrayAdapter(this, repo.groups()))
         // új kamera: ha épp egy csoport van kiválasztva, abba kerüljön alapból
         val defaultGroup = src?.group?.takeIf { it.isNotEmpty() } ?: filter?.takeIf { existing == null } ?: ""
         group.setText(defaultGroup, false)
@@ -496,6 +523,8 @@ class MainActivity : AppCompatActivity() {
         host.setText(src?.host ?: "")
         port.setText((src?.port ?: selectedType.defaultPort).toString())
         path.setText(src?.path ?: selectedType.defaultPath)
+        // a „További beállítások” nyitva, ha már van benne érték (csoport)
+        setAdvanced(defaultGroup.isNotEmpty())
         user.setText(src?.username ?: "")
         pass.setText(src?.password ?: "")
 
@@ -506,7 +535,7 @@ class MainActivity : AppCompatActivity() {
             testResult.text = getString(R.string.use_last_login, lastUser)
             testResult.setOnClickListener {
                 user.setText(lastUser)
-                pass.setText(Crypto.decrypt(prefs.getString(KEY_LAST_PASS, "") ?: ""))
+                pass.setText(Crypto.decrypt(prefs.getString(KEY_LAST_PASS, "") ?: "") ?: "")
                 testResult.text = ""
                 testResult.setOnClickListener(null)
             }
@@ -585,7 +614,7 @@ class MainActivity : AppCompatActivity() {
                 if (cam.username.isNotEmpty()) {
                     prefs.edit()
                         .putString(KEY_LAST_USER, cam.username)
-                        .putString(KEY_LAST_PASS, Crypto.encrypt(cam.password))
+                        .putString(KEY_LAST_PASS, Crypto.encrypt(cam.password) ?: "")
                         .apply()
                 }
                 refresh()
@@ -640,7 +669,7 @@ private class CameraAdapter(
         val cam = items[position]
         holder.title.text = cam.name
         val prefix = if (showGroup && cam.group.isNotEmpty()) "${cam.group} • " else ""
-        holder.subtitle.text = "$prefix${cam.type.label} • ${cam.displayUrl()}"
+        holder.subtitle.text = "$prefix${cam.type.label(holder.itemView.context)} • ${cam.displayUrl()}"
         holder.itemView.setOnClickListener { onClick(cam) }
         holder.itemView.setOnLongClickListener { onLongClick(cam); true }
         holder.handle.setOnTouchListener { v, event ->

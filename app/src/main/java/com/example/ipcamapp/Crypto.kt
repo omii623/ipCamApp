@@ -38,18 +38,21 @@ object Crypto {
         return gen.generateKey()
     }
 
-    /** Titkosítás; hiba esetén üres sztringet ad vissza (nem dob kivételt). */
-    fun encrypt(plain: String): String = try {
+    /** Titkosítás; hiba esetén null (a hívó dönti el, mi legyen – NEM szabad üresként menteni). */
+    fun encrypt(plain: String): String? = try {
         val cipher = Cipher.getInstance(TRANSFORM)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey())
         val ct = cipher.doFinal(plain.toByteArray(Charsets.UTF_8))
         Base64.encodeToString(cipher.iv + ct, Base64.NO_WRAP)
     } catch (_: Exception) {
-        ""
+        null
     }
 
-    /** Visszafejtés; hiba (vagy nem titkosított régi adat) esetén üres sztring. */
-    fun decrypt(data: String): String = try {
+    /**
+     * Visszafejtés; hiba esetén null. Tipikus ok: az adat egy másik telefonról jött
+     * (automatikus mentés / telefonváltás), ahol más volt a Keystore-kulcs.
+     */
+    fun decrypt(data: String): String? = try {
         val bytes = Base64.decode(data, Base64.NO_WRAP)
         val iv = bytes.copyOfRange(0, IV_LEN)
         val ct = bytes.copyOfRange(IV_LEN, bytes.size)
@@ -57,6 +60,6 @@ object Crypto {
         cipher.init(Cipher.DECRYPT_MODE, secretKey(), GCMParameterSpec(TAG_BITS, iv))
         String(cipher.doFinal(ct), Charsets.UTF_8)
     } catch (_: Exception) {
-        ""
+        null
     }
 }

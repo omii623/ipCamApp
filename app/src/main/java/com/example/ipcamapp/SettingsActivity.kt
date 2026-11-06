@@ -101,7 +101,7 @@ class SettingsActivity : AppCompatActivity() {
                     layout.error = null
                     Settings.setSearchPorts(this@SettingsActivity, ports.joinToString(", "))
                 } catch (e: PortScanner.RangeException) {
-                    layout.error = e.message // érvénytelen értéket nem mentünk
+                    layout.error = e.message(this@SettingsActivity) // érvénytelen értéket nem mentünk
                 }
             }
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}

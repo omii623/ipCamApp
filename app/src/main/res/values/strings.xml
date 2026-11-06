@@ -104,4 +104,16 @@
     <string name="about">Névjegy</string>
     <string name="about_version">%1$s · v%2$s</string>
     <string name="about_text">IP kamerák megtekintése RTSP, HTTP MJPEG, JPEG és HLS streamen keresztül, a helyi hálózaton.</string>
+    <string name="stream_disconnected">A kapcsolat megszakadt</string>
+    <string name="more_settings">További beállítások</string>
+    <string name="scan_bad_mask">Hibás maszk: /%1$s (16–32 lehet)</string>
+    <string name="scan_bad_range_end">Hibás tartomány vége: %1$s</string>
+    <string name="scan_range_reversed">A tartomány vége kisebb, mint az eleje: %1$s</string>
+    <string name="scan_range_too_big">Túl nagy tartomány (max. %1$d cím)</string>
+    <string name="scan_range_empty">Adj meg egy IP tartományt</string>
+    <string name="scan_bad_port">Hibás port: %1$s</string>
+    <string name="scan_ports_empty">Adj meg legalább egy portot</string>
+    <string name="scan_ports_too_many">Legfeljebb %1$d port adható meg</string>
+    <string name="scan_bad_ip">Hibás IP cím: %1$s</string>
+    <string name="passwords_locked">%1$d kamera jelszava nem olvasható ezen a telefonon (pl. telefonváltás vagy visszaállítás után). Szerkeszd ezeket a kamerákat, és add meg újra a jelszót.</string>
 </resources>
