@@ -1,20 +1,12 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+# Közös szabályok. Platform-specifikus: app/.gitignore (Android), desktop/.gitignore (Rust)
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+.idea/
+.vscode/
 
-# Kiadó-aláírókulcs és jelszavak – soha ne kerüljön verziókövetésbe
-/keystore.properties
+# Kulcsok sehol ne kerüljenek a repóba
 *.jks
 *.keystore
+keystore.properties
+
+# Letöltött külső binárisok a teszt szerverhez (MediaMTX)
+/test-server/bin/
