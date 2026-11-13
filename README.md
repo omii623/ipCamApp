@@ -1,109 +1,92 @@
 # IP Kamerák
 
-Android alkalmazás IP-kamerák megtekintésére a helyi hálózaton — RTSP, HTTP MJPEG,
-HTTP JPEG (képfrissítés) és HLS streameken keresztül. Kamerák kézi felvétele vagy
-automatikus keresése, csoportosítás, osztott nézet, és mentés/megosztás.
+IP-kamerák megtekintése a helyi hálózaton — **Androidon és Windowson**. Kamerák kézi
+felvétele vagy automatikus keresése (ONVIF, port-scan), csoportosítás, osztott nézet,
+gyártói sablonok, mentés/megosztás.
+
+A két alkalmazás **ugyanazt a mentésfájl- és QR-formátumot** használja, így a kamerák
+egyikből a másikba átvihetők (pl. a telefonon felvett kamerák QR-kóddal vagy exporttal
+a PC-re).
 
 > Magyar és angol nyelvű felület, világos/sötét téma, választható kiemelőszín.
 
-## Funkciók
+## Platformok
 
-- **Stream-típusok:** RTSP és HLS (Media3 **ExoPlayer**), HTTP **MJPEG** és **JPEG**
-  (saját dekóder).
-- **Kamera nézet:** csípéssel nagyítás (1–5×), dupla koppintásos zoom, teljes képernyő
-  (fekvőben automatikus), automatikus újracsatlakozás.
-- **Osztott (rács) nézet:** több kamera egyszerre, állítható oszlopszámmal; csoportonként is.
-- **Hálózati keresés:** **ONVIF** (WS-Discovery) a pontos stream-cím lekérdezésével, és
-  **RTSP port-scan** megadható IP-tartományban.
-- **Kapcsolatteszt:** a beírt belépéssel ellenőrzi az elérhetőséget (ikonos visszajelzés).
-- **Gyártói sablonok:** Hikvision, Dahua, Reolink, Tapo, Axis, Foscam stb. útvonalai —
-  saját sablonokkal bővíthető.
-- **Csoportok:** szűrő-csipek, áthúzásos sorrend, átnevezés/megszüntetés.
-- **Beállítások:** téma (rendszer/világos/sötét), nyelv (magyar/angol), kiemelőszín
-  csúszkával, alapértelmezett keresési portok, Névjegy build-azonosítóval.
-- **Mentés / megosztás:**
-  - **Fájl:** teljes mentés/visszaállítás (kamerák + sablonok + beállítások) JSON-ba,
-    a rendszer fájlválasztójával (SAF).
-  - **QR:** egy kamera megosztása két telefon között — az egyik generál, a másik beolvas.
-- **Biztonság:** a kamerajelszavak az **Android Keystore**-ban tárolt AES-256/GCM kulccsal
-  titkosítva kerülnek a telefonra.
+| Platform | Mappa | Technológia | Leírás | Release tag |
+|---|---|---|---|---|
+| Android | [`app/`](app/README.md) | Kotlin, Media3 ExoPlayer | [app/README.md](app/README.md) | `android-vX.Y` |
+| Windows | [`desktop/`](desktop/README.md) | Rust, egui, retina + openh264 | [desktop/README.md](desktop/README.md) | `desktop-vX.Y.Z` |
 
-## Követelmények
+Főbb eltérések: az Android a HLS-t és a H.265-öt is lejátssza (ExoPlayer), az asztali
+változat tisztán Rustban csak H.264-et dekódol, cserébe nincs külső függősége.
 
-- Android Studio (AGP a `gradle/libs.versions.toml`-ban), JDK 11+
-- `minSdk` 24, cél `targetSdk` 37
-- A streameléshez a telefon és a kamera **ugyanazon a helyi hálózaton** legyen.
+## Repó szerkezete
 
-## Fordítás és futtatás
+```
+app/                 – Android Gradle projekt (ezt nyisd meg az Android Studióban)
+desktop/             – Windows asztali változat (Cargo projekt)
+test-server/         – helyi kamu kameraszerver (HTTP MJPEG/JPEG, ONVIF, RTSP) – mindkettőhöz
+.github/workflows/   – release workflow-k (Android, asztali)
+```
+
+## Gyors kezdés
 
 ```bash
-# Debug APK
-./gradlew assembleDebug
+# Android – debug APK
+cd app && ./gradlew assembleDebug
 
-# Telepítés csatlakoztatott eszközre
-./gradlew installDebug
+# Windows – futtatás
+cd desktop && cargo run --release
 
-# Unit tesztek
-./gradlew testDebugUnitTest
+# Kamu kamera teszteléshez
+cd test-server && python fake_camera.py
 ```
 
-Vagy Android Studióból: válaszd ki az eszközt, majd **Run ▶**.
+Részletek a platformok saját README-jében és a [`test-server/README.md`](test-server/README.md)-ben.
 
-## Projektszerkezet
+## Kiadás (release)
 
-```
-app/src/main/java/com/example/ipcamapp/
-  Camera.kt, CameraRepository.kt   – modell és (titkosított) tárolás
-  Crypto.kt                        – AES/GCM a Keystore-ral
-  MjpegView.kt, ViewerActivity.kt, ZoomLayout.kt – lejátszás, zoom, teljes képernyő
-  GridActivity.kt, CameraTile.kt   – osztott nézet
-  Onvif.kt, PortScanner.kt, DiscoveryActivity.kt – hálózati keresés
-  ConnectionTester.kt, Presets.kt  – kapcsolatteszt, gyártói sablonok
-  App.kt, Settings, Accent.kt, SettingsActivity.kt – beállítások, téma, szín
-  Backup.kt, Qr.kt, PortraitCaptureActivity.kt – mentés/import, QR
-  MainActivity.kt                  – főképernyő (lista, csoportok, + menü)
-app/src/test/…                     – unit tesztek
-test-server/                       – helyi kamu kameraszerver fejlesztéshez
-```
+A két platform **külön verziózott** és **külön GitHub Release-be** kerül. A kiadást egy
+tag pusholása indítja, a buildet a GitHub Actions végzi (`.github/workflows/`). A tag
+verziójának egyeznie kell a projektben lévővel, különben a build leáll.
 
-Az egész logika az Activity-kben és néhány segédobjektumban él (nincs külön
-architektúra-réteg) — a projekt méretéhez igazodva egyszerű és átlátható.
-
-## Tesztek
-
-Tiszta JVM unit tesztek (gyorsak, eszköz nélkül futnak):
-
-- `PortScannerTest` – IP-tartomány és port feldolgozás
-- `CameraTest` – URL-építés, JSON oda-vissza
-- `PresetTest`, `MergeTest` – sablonok és import-összefésülés
-- `BackupTest`, `BackupCompatTest` – mentés/QR oda-vissza és verzió-kompatibilitás
-- `NegativeTest` – hibás/hiányos adatok kezelése
+| Tag | Verzió helye | Eredmény |
+|---|---|---|
+| `android-vX.Y` | `app/app/build.gradle.kts` → `versionName` (+ `versionCode` emelése) | aláírt `ipCamApp-X.Y.apk` |
+| `desktop-vX.Y.Z` | `desktop/Cargo.toml` → `version` | `ipCamDesktop-X.Y.Z.exe` |
 
 ```bash
-./gradlew testDebugUnitTest
-# riport: app/build/reports/tests/testDebugUnitTest/index.html
+# pl. Android 1.2: versionName = "1.2", versionCode += 1, commit, majd
+git tag android-v1.2
+git push origin android-v1.2
+
+# pl. asztali 0.2.0: version = "0.2.0", commit, majd
+git tag desktop-v0.2.0
+git push origin desktop-v0.2.0
 ```
 
-## Helyi teszt kamera
+### Android aláírás a CI-ban
 
-Valódi kamera nélkül a `test-server/` mappa kamu kamerát indít a PC-n:
+A repó *Settings → Secrets and variables → Actions* alatt kell négy secret:
 
-```bash
-cd test-server
-python fake_camera.py                 # HTTP MJPEG/JPEG + ONVIF a 8080-as porton
-python fake_camera.py --user admin --password 1234
+| Secret | Tartalom |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | a `release-keystore.jks` base64-ben |
+| `ANDROID_STORE_PASSWORD` | keystore jelszó |
+| `ANDROID_KEY_ALIAS` | kulcs alias |
+| `ANDROID_KEY_PASSWORD` | kulcs jelszó |
+
+A base64 előállítása PowerShellben:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("app\release-keystore.jks")) | Set-Clipboard
 ```
 
-Az appban: IP = a PC hálózati címe, port = 8080, útvonal = `/video.mjpg`.
-Részletek (RTSP is): `test-server/README.md`.
+Ha a secretek hiányoznak, az Android workflow hibával leáll (aláíratlan APK nem kerül ki).
 
-## Megjegyzések és korlátok
+## Megjegyzések
 
 - A kamerakeresés és élőkép csak a **helyi hálózaton** működik (otthonon kívülről
   VPN vagy porttovábbítás kell).
-- A mentés-**fájl** a jelszavakat **olvashatóan** tartalmazza (a Keystore-kulcs
-  eszközhöz kötött, nem hordozható) — az app export előtt figyelmeztet.
-- Valódi kamerákkal (Digest-hitelesítés, H.265) a streamelés még kiterjedt tesztelést
-  igényel; a fejlesztés eddig kamu szerverrel és emulátoron/telefonon a felületen történt.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+- A mentés-**fájl** mindkét platformon **olvashatóan** tartalmazza a jelszavakat
+  (a tároláshoz használt kulcs eszközhöz kötött) — export előtt mindkét app figyelmeztet.

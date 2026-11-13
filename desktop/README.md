@@ -1,8 +1,8 @@
 # IP Kamerák – asztali (ipCamDesktop)
 
 Windows asztali alkalmazás IP-kamerák megtekintésére a helyi hálózaton, Rustban
-(egui/eframe). Az Android **ipCamApp** asztali párja: ugyanazok a funkciók, és a
-mentésfájlok / QR-kódok a két alkalmazás között átvihetők.
+(egui/eframe). Az Android **ipCamApp** ([`../app/`](../app/README.md)) asztali párja:
+ugyanazok a funkciók, és a mentésfájlok / QR-kódok a két alkalmazás között átvihetők.
 
 > Magyar és angol felület, világos/sötét téma, választható kiemelőszín.
 
@@ -47,6 +47,9 @@ cargo run                # debug (a függőségek optimalizálva vannak)
 cargo build --release    # target/release/ipcam_desktop.exe – egyetlen, önálló exe
 cargo test               # unit tesztek
 ```
+
+A GitHubon a kiadást a `desktop-vX.Y.Z` tag indítja (a verzió a `Cargo.toml`-ban),
+lásd a [gyökér README-t](../README.md#kiadás-release).
 
 ## Ikon
 
@@ -103,7 +106,7 @@ tests/
 
 ## Tesztelés kamu kamerákkal
 
-Az Android projekt `test-server/` mappája használható (lásd annak README-jét):
+A repó gyökerében lévő közös `../test-server/` mappa használható (lásd annak README-jét):
 
 ```bash
 python fake_camera.py --user admin --password 1234   # HTTP 8080 + ONVIF
