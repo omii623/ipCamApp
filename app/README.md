@@ -59,8 +59,6 @@ keyAlias=…
 keyPassword=…
 ```
 
-A GitHubon a kiadást a `android-vX.Y` tag indítja (lásd a [gyökér README-t](../README.md#kiadás-release)).
-
 ## Projektszerkezet
 
 ```

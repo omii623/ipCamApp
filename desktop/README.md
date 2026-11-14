@@ -61,9 +61,6 @@ cargo build --release    # target/release/ipcam_desktop.exe – egyetlen, önál
 cargo test               # unit tesztek
 ```
 
-A GitHubon a kiadást a `desktop-vX.Y.Z` tag indítja (a verzió a `Cargo.toml`-ban),
-lásd a [gyökér README-t](../README.md#kiadás-release).
-
 ## Ikon
 
 Az ikon az Android app launcher-ikonját követi (objektív + piros „REC” pont).
