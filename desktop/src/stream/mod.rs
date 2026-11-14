@@ -3,11 +3,12 @@
 //!
 //! - HTTP MJPEG: a folyamból kivágjuk a JPEG képkockákat (FFD8 … FFD9),
 //! - HTTP JPEG: másodpercenként újratöltjük a képet,
-//! - RTSP: retina (RTSP kliens) + openh264 (H.264 dekóder), tisztán Rustban,
+//! - RTSP: retina (RTSP kliens) + openh264 (H.264) vagy FFmpeg libavcodec (H.265) dekóder,
 //! - HLS: nem támogatott.
 //!
 //! Hiba esetén 3 mp múlva automatikusan újracsatlakozik.
 
+mod hevc;
 mod mjpeg;
 mod rtsp;
 

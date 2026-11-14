@@ -1,7 +1,7 @@
 //! Élő tesztek a test-server kamu kameráival (Android projekt: ipCamApp/test-server).
 //! Alapból kimaradnak; futtatás, ha a szerverek futnak:
 //!   python fake_camera.py --user admin --password 1234     (HTTP 8080 + ONVIF)
-//!   start-rtsp.ps1                                         (RTSP 8554 /stream1)
+//!   start-rtsp.ps1 -H265                                   (RTSP 8554 /stream1, /hevc1)
 //!   cargo test --test live -- --ignored --test-threads=1
 
 use ipcam_desktop::model::{Camera, StreamType};
@@ -63,6 +63,13 @@ fn mjpeg_wrong_password_fails() {
 #[ignore]
 fn rtsp_h264() {
     let size = play(&cam(StreamType::Rtsp, 8554, "/stream1", "", ""), 25).unwrap();
+    assert_eq!(size, [1280, 720]);
+}
+
+#[test]
+#[ignore]
+fn rtsp_h265() {
+    let size = play(&cam(StreamType::Rtsp, 8554, "/hevc1", "", ""), 25).unwrap();
     assert_eq!(size, [1280, 720]);
 }
 

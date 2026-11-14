@@ -90,8 +90,8 @@ fn about(ui: &mut egui::Ui) {
     ui.strong(t("Névjegy", "About"));
     ui.label(format!("ipCamDesktop · v{}", env!("CARGO_PKG_VERSION")));
     let text = t(
-        "IP kamerák megtekintése RTSP (H.264), HTTP MJPEG és JPEG streamen keresztül, a helyi hálózaton.",
-        "View IP cameras over RTSP (H.264), HTTP MJPEG and JPEG streams on your local network.",
+        "IP kamerák megtekintése RTSP (H.264/H.265), HTTP MJPEG és JPEG streamen keresztül, a helyi hálózaton.",
+        "View IP cameras over RTSP (H.264/H.265), HTTP MJPEG and JPEG streams on your local network.",
     );
     ui.label(RichText::new(text).small());
 }

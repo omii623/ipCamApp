@@ -1,10 +1,17 @@
-//! RTSP lejátszás tisztán Rustban: retina (RTSP kliens) + openh264 (H.264 dekóder).
+//! RTSP lejátszás: retina (RTSP kliens) + openh264 (H.264) vagy FFmpeg libavcodec (H.265).
 
 use super::Shared;
+use super::hevc::HevcDecoder;
 use crate::i18n::t;
 use crate::model::Camera;
 use eframe::egui::ColorImage;
 use std::time::Duration;
+
+/// A stream kodekjének megfelelő dekóder.
+enum Decoder {
+    H264(openh264::decoder::Decoder),
+    H265(HevcDecoder),
+}
 
 pub(super) fn run(cam: &Camera, sh: &Shared) -> Result<(), String> {
     let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(|e| e.to_string())?;
@@ -32,16 +39,20 @@ async fn rtsp_session(cam: &Camera, sh: &Shared) -> Result<(), String> {
         .position(|s| s.media() == "video")
         .ok_or_else(|| t("A kamera nem küld videót", "The camera has no video stream").to_string())?;
     let enc = session.streams()[idx].encoding_name().to_ascii_lowercase();
-    if enc != "h264" {
-        return Err(match crate::i18n::lang() {
-            crate::i18n::Lang::Hu => format!(
-                "Nem támogatott kodek: {enc} (csak H.264). Állítsd a kamerát H.264-re, vagy használd az alstreamet."
-            ),
-            crate::i18n::Lang::En => format!(
-                "Unsupported codec: {enc} (H.264 only). Switch the camera to H.264 or use the sub-stream."
-            ),
-        });
-    }
+    let mut decoder = match enc.as_str() {
+        "h264" => Decoder::H264(openh264::decoder::Decoder::new().map_err(|e| e.to_string())?),
+        "h265" => Decoder::H265(HevcDecoder::new()?),
+        _ => {
+            return Err(match crate::i18n::lang() {
+                crate::i18n::Lang::Hu => format!(
+                    "Nem támogatott kodek: {enc} (csak H.264 és H.265). Állítsd át a kamerát, vagy használd az alstreamet."
+                ),
+                crate::i18n::Lang::En => format!(
+                    "Unsupported codec: {enc} (H.264 and H.265 only). Change the camera setting or use the sub-stream."
+                ),
+            });
+        }
+    };
     session
         .setup(idx, SetupOptions::default().frame_format(FrameFormat::SIMPLE))
         .await
@@ -53,7 +64,6 @@ async fn rtsp_session(cam: &Camera, sh: &Shared) -> Result<(), String> {
         .demuxed()
         .map_err(|e| e.to_string())?;
 
-    let mut decoder = openh264::decoder::Decoder::new().map_err(|e| e.to_string())?;
     let mut idle = 0u32;
     let mut rgba = Vec::new();
     loop {
@@ -76,14 +86,21 @@ async fn rtsp_session(cam: &Camera, sh: &Shared) -> Result<(), String> {
         if let CodecItem::VideoFrame(frame) = item {
             // minden képkockát dekódolni kell (a következők ezekre épülnek),
             // de RGBA-ra csak akkor alakítunk, ha a felület már elvette az előzőt
-            match decoder.decode(frame.data()) {
-                Ok(Some(yuv)) if sh.wants_frame() => {
-                    let (w, h) = yuv.dimensions();
-                    rgba.resize(w * h * 4, 0);
-                    yuv.write_rgba8(&mut rgba);
-                    sh.publish(ColorImage::from_rgba_unmultiplied([w, h], &rgba));
+            match &mut decoder {
+                Decoder::H264(d) => match d.decode(frame.data()) {
+                    Ok(Some(yuv)) if sh.wants_frame() => {
+                        let (w, h) = yuv.dimensions();
+                        rgba.resize(w * h * 4, 0);
+                        yuv.write_rgba8(&mut rgba);
+                        sh.publish(ColorImage::from_rgba_unmultiplied([w, h], &rgba));
+                    }
+                    _ => {} // dekódolási hiba (pl. csomagvesztés): a következő kulcskockánál helyreáll
+                },
+                Decoder::H265(d) => {
+                    if let Some(img) = d.decode(frame.data(), sh.wants_frame()) {
+                        sh.publish(img);
+                    }
                 }
-                _ => {} // dekódolási hiba (pl. csomagvesztés): a következő kulcskockánál helyreáll
             }
         }
     }

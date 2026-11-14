@@ -8,6 +8,9 @@ base64 = "0.23.1"
 dirs = "7.0.0"
 eframe = { version = "0.37.0", default-features = false, features = ["clipboard", "default_fonts", "glow", "persistence"] }
 egui = { version = "0.37", default-features = false, features = ["monochrome_emoji_fonts"] }
+# H.265 dekóder: FFmpeg libavcodec + swscale, statikusan linkelve (Windows-on vcpkg-ből, lásd README).
+# A "format" feature kell: az ffmpeg-next swscale-része a format modulra hivatkozik.
+ffmpeg-next = { version = "9.1", default-features = false, features = ["codec", "format", "software-scaling", "static"] }
 futures = "0.3.34"
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
 md-5 = "0.11.0"
