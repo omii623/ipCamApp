@@ -10,6 +10,15 @@ a PC-re).
 
 > Magyar és angol nyelvű felület, világos/sötét téma, választható kiemelőszín.
 
+## Letöltés
+
+| Platform | Legújabb verzió | Letöltés |
+|---|---|---|
+| Android | [1.1.0](https://github.com/omii623/ipCamApp/releases/tag/android-v1.1.0) | [ipCamApp-v1.1.0.apk](https://github.com/omii623/ipCamApp/releases/download/android-v1.1.0/ipCamApp-v1.1.0.apk) |
+| Windows | [1.0.0](https://github.com/omii623/ipCamApp/releases/tag/desktop-v1.0.0) | [ipCamDesktop-1.0.0.exe](https://github.com/omii623/ipCamApp/releases/download/desktop-v1.0.0/ipCamDesktop-1.0.0.exe) |
+
+Az összes korábbi kiadás: [Releases](https://github.com/omii623/ipCamApp/releases).
+
 ## Platformok
 
 | Platform | Mappa | Technológia | Leírás | Release tag |
