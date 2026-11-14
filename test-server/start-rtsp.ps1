@@ -5,9 +5,11 @@
 #
 # Futtatás:  powershell -ExecutionPolicy Bypass -File .\start-rtsp.ps1
 #            powershell -ExecutionPolicy Bypass -File .\start-rtsp.ps1 -Cameras 3   (stream1..stream3)
+#            powershell -ExecutionPolicy Bypass -File .\start-rtsp.ps1 -H265        (+ H.265: /hevc1..)
 
 param(
     [int]$Cameras = 1,
+    [switch]$H265,
     [string]$MediaMtxVersion = "latest"
 )
 
@@ -58,6 +60,19 @@ for ($i = 1; $i -le $Cameras; $i++) {
         "rtsp://127.0.0.1:8554/stream$i"
     )
     $ffmpegs += Start-Process -FilePath "ffmpeg" -ArgumentList $ffArgs -PassThru -NoNewWindow
+    if ($H265) {
+        # ugyanaz a tesztkép H.265-tel (az ffmpeg-ben libx265 kell)
+        $hevcArgs = @(
+            "-hide_banner", "-loglevel", "error", "-re",
+            "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=25",
+            "-vf", ($vf -replace "CAM $i", "HEVC $i"),
+            "-c:v", "libx265", "-preset", "ultrafast", "-tune", "zerolatency",
+            "-x265-params", "keyint=50:log-level=error", "-pix_fmt", "yuv420p",
+            "-f", "rtsp", "-rtsp_transport", "tcp",
+            "rtsp://127.0.0.1:8554/hevc$i"
+        )
+        $ffmpegs += Start-Process -FilePath "ffmpeg" -ArgumentList $hevcArgs -PassThru -NoNewWindow
+    }
 }
 
 $ips = Get-NetIPAddress -AddressFamily IPv4 |
@@ -72,6 +87,7 @@ foreach ($ip in $ips) { Write-Host "  rtsp://${ip}:8554/stream1" }
 Write-Host ""
 Write-Host "  Az appban: Típus = RTSP, Port = 8554, Útvonal = /stream1"
 if ($Cameras -gt 1) { Write-Host "  További kamerák: /stream2 ... /stream$Cameras" }
+if ($H265) { Write-Host "  H.265 (HEVC): /hevc1 ... /hevc$Cameras" }
 Write-Host "  Leállítás: Enter"
 Write-Host "============================================================"
 [void](Read-Host)

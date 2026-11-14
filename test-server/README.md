@@ -43,9 +43,12 @@ Kell hozzá: ffmpeg. A MediaMTX RTSP szervert első futáskor letölti a `bin\` 
 ```
 powershell -ExecutionPolicy Bypass -File .\start-rtsp.ps1
 powershell -ExecutionPolicy Bypass -File .\start-rtsp.ps1 -Cameras 4
+powershell -ExecutionPolicy Bypass -File .\start-rtsp.ps1 -H265
 ```
 
 Az appban: **RTSP**, port **8554**, útvonal **/stream1** (…/stream4).
+A `-H265` kapcsolóval ugyanez H.265-tel is elindul a **/hevc1** (…) útvonalon
+(az ffmpeg-ben `libx265` kell – a szokásos Windows-os buildekben benne van).
 
 ## Fontos
 
