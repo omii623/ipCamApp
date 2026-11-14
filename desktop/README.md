@@ -8,9 +8,10 @@ ugyanazok a funkciók, és a mentésfájlok / QR-kódok a két alkalmazás köz�
 
 ## Funkciók
 
-- **Stream-típusok:** RTSP (**H.264**), HTTP **MJPEG** és HTTP **JPEG** (képfrissítés) –
-  tisztán Rustban, külső program (ffmpeg, VLC) nélkül.
-  - RTSP: [retina](https://crates.io/crates/retina) kliens + [openh264](https://crates.io/crates/openh264) dekóder.
+- **Stream-típusok:** RTSP (**H.264** és **H.265/HEVC**), HTTP **MJPEG** és HTTP **JPEG**
+  (képfrissítés) – külső program (ffmpeg.exe, VLC) nélkül, egyetlen exe.
+  - RTSP: [retina](https://crates.io/crates/retina) kliens; H.264: [openh264](https://crates.io/crates/openh264),
+    H.265: FFmpeg libavcodec ([ffmpeg-next](https://crates.io/crates/ffmpeg-next), statikusan beépítve).
   - Hitelesítés: Basic és **Digest** (MD5 / SHA-256), RTSP-n és HTTP-n is.
 - **Kamera nézet:** egérgörgős nagyítás (1–8×) a kurzor körül, húzással mozgatás,
   dupla kattintásos zoom, **teljes képernyő** (F11, kilépés: Esc), automatikus újracsatlakozás.
@@ -33,14 +34,26 @@ ugyanazok a funkciók, és a mentésfájlok / QR-kódok a két alkalmazás köz�
 
 ## Korlátok
 
-- **HLS (m3u8)** és **H.265** stream lejátszása nem támogatott (tiszta Rust dekóder csak
-  H.264-hez van). H.265-ös kamerán állítsd a fő- vagy alstreamet H.264-re.
+- **HLS (m3u8)** stream lejátszása nem támogatott.
+- A H.265 dekódolása szoftveres, és jóval több CPU-t visz, mint a H.264: sok 4K-s H.265-ös
+  kamera osztott nézetben megterhelheti a gépet – ilyenkor használd az alstreamet.
 - A HTTPS csak érvényes tanúsítvánnyal működik (önaláírt kameratanúsítvány nem).
 
 ## Fordítás és futtatás
 
 Kell hozzá: [Rust](https://rustup.rs) (stable, MSVC) és a Visual Studio C++ build tools
-(az openh264 C++ forrásból fordul).
+(az openh264 C++ forrásból fordul), valamint a H.265-höz:
+
+- **FFmpeg** statikus könyvtárként, [vcpkg](https://vcpkg.io)-ből (egyszer, ~10–15 perc):
+  ```bash
+  vcpkg install "ffmpeg[core,avcodec,avformat,swscale]:x64-windows-static-md"
+  ```
+  és a `VCPKG_ROOT` környezeti változó mutasson a vcpkg mappájára.
+  (Alternatíva: `FFMPEG_DIR` egy előre fordított, statikus FFmpeg `include`/`lib` mappájára.)
+- **LLVM** (`winget install LLVM.LLVM`) – a bindgen a libclang-ot használja; ha nem találja,
+  `LIBCLANG_PATH=C:\Program Files\LLVM\bin`.
+
+Az FFmpeg-ből csak a libavcodec, a libavformat és a swscale kerül be (LGPL), az exe így is önálló marad.
 
 ```bash
 cargo run                # debug (a függőségek optimalizálva vannak)
@@ -91,7 +104,8 @@ src/
   stream/                  – élőkép
     mod.rs                   Player: háttérszál, állapot, újracsatlakozás
     mjpeg.rs                 HTTP MJPEG és JPEG
-    rtsp.rs                  RTSP + H.264 (retina, openh264)
+    rtsp.rs                  RTSP (retina) + H.264 (openh264)
+    hevc.rs                  H.265 dekóder (FFmpeg libavcodec + swscale)
   ui/                      – felület (egui)
     mod.rs                   IpCamApp: állapot, műveletek, főkeret
     state.rs                 nézet, csoportszűrő, nagyítás, műveletek
@@ -110,7 +124,7 @@ A repó gyökerében lévő közös `../test-server/` mappa használható (lásd
 
 ```bash
 python fake_camera.py --user admin --password 1234   # HTTP 8080 + ONVIF
-powershell -ExecutionPolicy Bypass -File .\start-rtsp.ps1   # RTSP 8554 /stream1
+powershell -ExecutionPolicy Bypass -File .\start-rtsp.ps1 -H265   # RTSP 8554 /stream1 + /hevc1
 cargo test --test live -- --ignored --test-threads=1   # élő tesztek
 ```
 

@@ -10,3 +10,6 @@ keystore.properties
 
 # Letöltött külső binárisok a teszt szerverhez (MediaMTX)
 /test-server/bin/
+
+# Kiadási kimenet (release.ps1: APK, exe)
+/dist/

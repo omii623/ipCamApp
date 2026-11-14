@@ -24,10 +24,10 @@ Az összes korábbi kiadás: [Releases](https://github.com/omii623/ipCamApp/rele
 | Platform | Mappa | Technológia | Leírás | Release tag |
 |---|---|---|---|---|
 | Android | [`app/`](app/README.md) | Kotlin, Media3 ExoPlayer | [app/README.md](app/README.md) | `android-vX.Y` |
-| Windows | [`desktop/`](desktop/README.md) | Rust, egui, retina + openh264 | [desktop/README.md](desktop/README.md) | `desktop-vX.Y.Z` |
+| Windows | [`desktop/`](desktop/README.md) | Rust, egui, retina + openh264 / FFmpeg (H.265) | [desktop/README.md](desktop/README.md) | `desktop-vX.Y.Z` |
 
-Főbb eltérések: az Android a HLS-t és a H.265-öt is lejátssza (ExoPlayer), az asztali
-változat tisztán Rustban csak H.264-et dekódol, cserébe nincs külső függősége.
+Főbb eltérés: az Android a HLS-t is lejátssza (ExoPlayer), az asztali nem. A H.265-öt
+mindkettő tudja (az asztali a beépített, statikusan linkelt FFmpeg libavcodec-kel).
 
 ## Repó szerkezete
 
