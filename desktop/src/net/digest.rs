@@ -11,7 +11,8 @@ pub struct DigestAuth {
     nonce: String,
     opaque: Option<String>,
     qop_auth: bool,
-    algorithm: String,
+    /// A kihívásban kapott algoritmus; None, ha nem adták meg (ilyenkor MD5).
+    algorithm: Option<String>,
     nc: u32,
 }
 
@@ -36,7 +37,7 @@ impl DigestAuth {
         let mut nonce = None;
         let mut opaque = None;
         let mut qop = String::new();
-        let mut algorithm = "MD5".to_string();
+        let mut algorithm = None;
         for c in PARAM.captures_iter(h) {
             let v = c.get(2).or(c.get(3)).map(|m| m.as_str().to_string()).unwrap_or_default();
             match c[1].to_ascii_lowercase().as_str() {
@@ -44,7 +45,7 @@ impl DigestAuth {
                 "nonce" => nonce = Some(v),
                 "opaque" => opaque = Some(v),
                 "qop" => qop = v,
-                "algorithm" => algorithm = v,
+                "algorithm" => algorithm = Some(v),
                 _ => {}
             }
         }
@@ -70,24 +71,34 @@ impl DigestAuth {
         pass: &str,
         cnonce: &str,
     ) -> String {
-        let sha = self.algorithm.to_ascii_uppercase().starts_with("SHA-256");
+        let sha = self.algorithm.as_deref().is_some_and(|a| a.to_ascii_uppercase().starts_with("SHA-256"));
         let ha1 = hash(sha, &format!("{user}:{}:{pass}", self.realm));
         let ha2 = hash(sha, &format!("{method}:{uri}"));
+        // Előbb az idézőjeles mezők (response közvetlenül az uri után), a végén az idézőjel
+        // nélküliek (qop, nc, algorithm); az algorithm csak ha a kihívás is megadta. A régi
+        // LIVE555 RTSP-szerverek (sok olcsó kamera) az "algorithm=MD5"-öt a response előtt
+        // elrontva dolgozzák fel, és jó jelszóra is 401-et adnak.
         let mut s = format!(
-            "Digest username=\"{user}\", realm=\"{}\", nonce=\"{}\", uri=\"{uri}\", algorithm={}",
-            self.realm, self.nonce, self.algorithm
+            "Digest username=\"{user}\", realm=\"{}\", nonce=\"{}\", uri=\"{uri}\"",
+            self.realm, self.nonce
         );
-        let response = if self.qop_auth {
+        let mut tail = String::new();
+        if self.qop_auth {
             self.nc += 1;
             let nc = format!("{:08x}", self.nc);
-            s.push_str(&format!(", qop=auth, nc={nc}, cnonce=\"{cnonce}\""));
-            hash(sha, &format!("{ha1}:{}:{nc}:{cnonce}:auth:{ha2}", self.nonce))
+            let r = hash(sha, &format!("{ha1}:{}:{nc}:{cnonce}:auth:{ha2}", self.nonce));
+            s.push_str(&format!(", response=\"{r}\", cnonce=\"{cnonce}\""));
+            tail.push_str(&format!(", qop=auth, nc={nc}"));
         } else {
-            hash(sha, &format!("{ha1}:{}:{ha2}", self.nonce))
-        };
-        s.push_str(&format!(", response=\"{response}\""));
+            let r = hash(sha, &format!("{ha1}:{}:{ha2}", self.nonce));
+            s.push_str(&format!(", response=\"{r}\""));
+        }
         if let Some(o) = &self.opaque {
             s.push_str(&format!(", opaque=\"{o}\""));
+        }
+        s.push_str(&tail);
+        if let Some(a) = &self.algorithm {
+            s.push_str(&format!(", algorithm={a}"));
         }
         s
     }
@@ -108,6 +119,30 @@ mod tests {
         assert!(h.contains("response=\"6629fae49393a05397450978507c4ef1\""), "{h}");
         assert!(h.contains("nc=00000001"));
         assert!(h.contains("opaque=\"5ccc069c403ebaf9f0171e9517f40e41\""));
+    }
+
+    /// Valódi LIVE555 (régi kamera) kihívás: nincs algorithm és qop – a fejlécben se legyen
+    /// algorithm, és a response legyen az utolsó (különben jó jelszóra is 401).
+    #[test]
+    fn live555_compatible_order() {
+        let mut d = DigestAuth::parse(
+            r#"Digest realm="LIVE555 Streaming Media", nonce="7a6401ac69d1ee3914ad0f40b72ec884""#,
+        )
+        .unwrap();
+        let url = "rtsp://192.168.1.183:554/mpeg4";
+        let h = d.header("DESCRIBE", url, "admin", "123456");
+        let ha1 = hash(false, "admin:LIVE555 Streaming Media:123456");
+        let expected = hash(false, &format!("{ha1}:7a6401ac69d1ee3914ad0f40b72ec884:{}", hash(false, &format!("DESCRIBE:{url}"))));
+        assert!(!h.contains("algorithm"), "{h}");
+        assert!(h.ends_with(&format!("response=\"{expected}\"")), "{h}");
+    }
+
+    #[test]
+    fn algorithm_kept_at_end_when_challenged() {
+        let mut d = DigestAuth::parse(r#"Digest realm="r", nonce="n", algorithm=SHA-256, qop="auth""#).unwrap();
+        let h = d.header("GET", "/", "u", "p");
+        assert!(h.ends_with(", algorithm=SHA-256"), "{h}");
+        assert!(h.find("response=").unwrap() < h.find("qop=auth").unwrap(), "{h}");
     }
 
     #[test]

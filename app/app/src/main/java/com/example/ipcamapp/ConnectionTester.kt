@@ -70,18 +70,18 @@ object ConnectionTester {
             }
 
             var resp = describe(1, null)
-            if (resp.contains("401") && cam.username.isNotEmpty()) {
-                // Basic próbálkozás (a Digest-et nem építjük itt ki – az app lejátszója kezeli)
-                val basic = "Basic " + Base64.encodeToString(
-                    "${cam.username}:${cam.password}".toByteArray(), Base64.NO_WRAP)
-                resp = describe(2, basic)
+            if (rtspStatus(resp) == 401 && cam.username.isNotEmpty()) {
+                // Digest, ha a kamera azt kéri (a legtöbb csak ezt fogadja el), különben Basic
+                val auth = rtspDigest(resp)?.header("DESCRIBE", url, cam.username, cam.password)
+                    ?: ("Basic " + Base64.encodeToString(
+                        "${cam.username}:${cam.password}".toByteArray(), Base64.NO_WRAP))
+                resp = describe(2, auth)
             }
-            when {
-                resp.startsWith("RTSP/1.0 200") || resp.startsWith("RTSP/1.0 2") -> Result.Ok
-                resp.contains(" 401") -> Result.AuthFailed
-                resp.startsWith("RTSP/1.0") -> Result.Ok // válaszol RTSP-vel: a szerver él
-                resp.isEmpty() -> Result.Unreachable
-                else -> Result.Other(resp.lineSequence().firstOrNull()?.trim() ?: "?")
+            when (rtspStatus(resp)) {
+                401 -> Result.AuthFailed
+                null -> if (resp.isEmpty()) Result.Unreachable
+                    else Result.Other(resp.lineSequence().firstOrNull()?.trim() ?: "?")
+                else -> Result.Ok // válaszol RTSP-vel (200, vagy pl. 404 rossz útvonalnál): a szerver él
             }
         }
     } catch (_: IOException) {
@@ -89,4 +89,13 @@ object ConnectionTester {
     } catch (e: Exception) {
         Result.Other(e.message ?: e.javaClass.simpleName)
     }
+
+    /** Az RTSP-válasz státuszkódja az első sorból (nem a törzsben keresve); null, ha nem RTSP. */
+    internal fun rtspStatus(resp: String): Int? =
+        Regex("""^RTSP/\d\.\d (\d{3})""").find(resp)?.groupValues?.get(1)?.toIntOrNull()
+
+    /** A 401-es válasz Digest-kihívása (ha több WWW-Authenticate fejléc van, a Digest-et választja). */
+    internal fun rtspDigest(resp: String): DigestAuth? =
+        Regex("""(?im)^WWW-Authenticate:[ \t]*(.+?)\r?$""").findAll(resp)
+            .firstNotNullOfOrNull { DigestAuth.parse(it.groupValues[1]) }
 }
