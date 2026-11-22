@@ -77,6 +77,7 @@ class CameraTile(context: Context, parent: ViewGroup, val camera: Camera) {
             RtspMediaSource.Factory()
                 .setTimeoutMs(8000)
                 .setForceUseRtpTcp(true)
+                .setSocketFactory(SdpFixingSocketFactory()) // hibás SDP-jű kamerák (lásd SdpFix)
                 .createMediaSource(MediaItem.fromUri(Uri.parse(camera.buildUrl(includeCredentials = true))))
         } else {
             val http = DefaultHttpDataSource.Factory()

@@ -154,6 +154,8 @@ class ViewerActivity : AppCompatActivity() {
                 .setTimeoutMs(8000)
                 // Sok kamera csak TCP-n működik megbízhatóan (NAT / mobilnet esetén is)
                 .setForceUseRtpTcp(true)
+                // egyes kamerák hibás SDP-je (kezdőkód a sprop-*-ban) különben összeomlasztja az appot
+                .setSocketFactory(SdpFixingSocketFactory())
                 .createMediaSource(MediaItem.fromUri(Uri.parse(camera.buildUrl(includeCredentials = true))))
         } else {
             val http = DefaultHttpDataSource.Factory()
